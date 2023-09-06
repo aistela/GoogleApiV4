@@ -1,0 +1,9 @@
+C:\Aistes\GoogleAPI\GoogleAPI\bin\Release\GoogleAPI.exe 2023-08-01
+C:\Aistes\GoogleAPI\GoogleAPI\bin\Release\GoogleAPI.exe 2023-08-02
+C:\Aistes\GoogleAPI\GoogleAPI\bin\Release\GoogleAPI.exe 2023-08-03
+C:\Aistes\GoogleAPI\GoogleAPI\bin\Release\GoogleAPI.exe 2023-08-04
+C:\Aistes\GoogleAPI\GoogleAPI\bin\Release\GoogleAPI.exe 2023-08-05
+C:\Aistes\GoogleAPI\GoogleAPI\bin\Release\GoogleAPI.exe 2023-08-06
+C:\Aistes\GoogleAPI\GoogleAPI\bin\Release\GoogleAPI.exe 2023-08-07
+C:\Aistes\GoogleAPI\GoogleAPI\bin\Release\GoogleAPI.exe 2023-08-08
+C:\Aistes\GoogleAPI\GoogleAPI\bin\Release\GoogleAPI.exe 2023-08-09
