@@ -15,7 +15,6 @@ namespace GoogleAPI
             Console.WriteLine("propertyId " + propertyId); 
             Console.WriteLine("Deleted " + dalis);
 
-
             /**
              * TODO(developer): Uncomment this variable and replace with your
              *  Google Analytics 4 property ID before running the sample.
@@ -31,9 +30,8 @@ namespace GoogleAPI
             Console.WriteLine("clien created ");
             RunReportRequest request;
 
-
             int offset = 0;
-            int limit = Int32.Parse(ConfigurationManager.AppSettings["limit"]);
+            int limit = int.Parse(ConfigurationManager.AppSettings["limit"]);
             string startDate = data;
             string endDate = data;
 
@@ -46,13 +44,13 @@ namespace GoogleAPI
                 {
                     Property = "properties/" + propertyId,
                     Dimensions = { new Dimension { Name = "itemId" }, },
-                    Metrics = { new Metric { Name = "sessions" }, },
+                    Metrics = { new Metric { Name = "sessions" }, new Metric { Name = "itemsViewed" }, },
                     DateRanges = { new DateRange { StartDate = startDate, EndDate = endDate }, },
                     Limit = limit,
                     Offset = offset,
                 };
                 response = client.RunReport(request);
-                WriteToFile(response.Rows.ToString(), startDate, endDate, offset);
+                WriteToFile(response.Rows.ToString(), startDate, offset, propertyId);
                 SaveToDb(response.Rows.ToString(), startDate, endDate, dalis);
                 Console.WriteLine("Offset {0}, rowcount{1}", offset, rowCount);
                 rowCount = response.RowCount;
@@ -111,18 +109,15 @@ namespace GoogleAPI
             }
         }
 
-        public static void WriteToFile(string text, string startDate, string endDate, int offset)
+        public static void WriteToFile(string text, string startDate, int offset, string propertyId )
         {
-            // Console.WriteLine("{0}, {1}", \\\\magento\\responses\\Temp\\LemonaAPI_response_{0}_{1}_offset_{2}.json", startDate, endDate, offset.ToString());
-            string fileName = string.Format("\\\\magento\\responses\\GoogleAPI\\LemonaAPI_response_{0}_{1}_offset_{2}.json", startDate, endDate, offset.ToString());
+            string fileName = string.Format("\\\\magento\\responses\\GoogleAPI\\LemonaAPI_response_{0}_{1}_offset_{2}.json", propertyId, startDate, offset.ToString());
             Console.WriteLine("Saving file: " + fileName);
             using (StreamWriter writer = new StreamWriter(fileName))
             {
                 writer.WriteLine(text);
             }
             Console.WriteLine("File saved");
-
         }
-
     }
 }
