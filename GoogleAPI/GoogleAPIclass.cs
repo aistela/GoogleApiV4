@@ -80,7 +80,7 @@ namespace GoogleAPI
                 Console.WriteLine("Data nuo: " + startDate);
                 Console.WriteLine("Data iki: " + endDate);
                 Console.WriteLine("Dalis: " + dalis);
-                Console.WriteLine("Response: " + response);
+                //Console.WriteLine("Response: " + response);
                 Console.WriteLine("Error: " + ex);
             }
         }
@@ -90,6 +90,7 @@ namespace GoogleAPI
             try
             {
                 SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnString_Analitika"].ConnectionString);
+           
                 SqlCommand cmd = new SqlCommand("GoogleAPI_delete", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@dataNuo", startDate);
@@ -111,7 +112,7 @@ namespace GoogleAPI
 
         public static void WriteToFile(string text, string startDate, int offset, string propertyId )
         {
-            string fileName = string.Format("\\\\magento\\responses\\GoogleAPI\\LemonaAPI_response_{0}_{1}_offset_{2}.json", propertyId, startDate, offset.ToString());
+            string fileName = ConfigurationManager.AppSettings["ResposeFolder"] + string.Format("\\LemonaAPI_response_{0}_{1}_offset_{2}.json", propertyId, startDate, offset.ToString());
             Console.WriteLine("Saving file: " + fileName);
             using (StreamWriter writer = new StreamWriter(fileName))
             {

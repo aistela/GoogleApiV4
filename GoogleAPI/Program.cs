@@ -8,15 +8,18 @@ namespace GoogleAPI
         static void Main(string[] args)
         {
             DateTime data;
+
+            _ = int.TryParse(ConfigurationManager.AppSettings["delayInDays"] ?? "1", out int delayInDays);
             if (args.Length == 0)
             {
-               data = DateTime.Now.AddDays(-1);
+               data = DateTime.Now.AddDays(-1 * delayInDays);
             }
             else
             {
                 _ = DateTime.TryParse(args[0], out data);
             }
 
+            //data = DateTime.Now.AddDays(-14);
             Console.WriteLine("Start " + data);
 
             GoogleAPIclass.SampleRunReport(ConfigurationManager.AppSettings["propertyId-LT"], data.ToString("yyyy-MM-dd"), "LT");
