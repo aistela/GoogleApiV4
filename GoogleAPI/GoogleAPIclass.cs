@@ -1,62 +1,78 @@
-﻿using Google.Analytics.Data.V1Beta;
+﻿
 using System;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Data;
 using System.IO;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.AnalyticsReporting.v4.Data;
+using Google.Apis.AnalyticsReporting.v4;
+using Google.Apis.Services;
+using System.Collections.Generic;
+using System.Linq;
+//using Google.Api;
+using System.Runtime.InteropServices.ComTypes;
+using Newtonsoft.Json;
+using Grpc.Core;
 
 namespace GoogleAPI
 {
     public class GoogleAPIclass
     {
-        public static void SampleRunReport(string propertyId, string data, string dalis)
+        public static void GetReportData(UserCredential credential, string propertyId, string startDate, string endDate, string dalis)
         {
-            DeleteFromDb(data, data, dalis);
-            Console.WriteLine("propertyId " + propertyId); 
-            Console.WriteLine("Deleted " + dalis);
-
-            /**
-             * TODO(developer): Uncomment this variable and replace with your
-             *  Google Analytics 4 property ID before running the sample.
-             */
-            // propertyId = "YOUR-GA4-PROPERTY-ID";
-
-            // Using a default constructor instructs the client to use the credentials
-            // specified in GOOGLE_APPLICATION_CREDENTIALS environment variable.
-            //BetaAnalyticsDataClient client = BetaAnalyticsDataClient.Create();
-
-            Console.WriteLine("creating client: " + ConfigurationManager.AppSettings["ConnectionFile"]);  
-            BetaAnalyticsDataClient client = new BetaAnalyticsDataClientBuilder() { JsonCredentials = File.ReadAllText(ConfigurationManager.AppSettings["ConnectionFile"] ?? "") }.Build();
-            Console.WriteLine("clien created ");
-            RunReportRequest request;
-
             int offset = 0;
             int limit = int.Parse(ConfigurationManager.AppSettings["limit"]);
-            string startDate = data;
-            string endDate = data;
-
-            int rowCount = 1;
-            RunReportResponse response;
-
-            do
+            int? rowCount = 1;
+            string resultJson;
+            GetReportsResponse response;
+            using (var svc = new AnalyticsReportingService(
+                    new BaseClientService.Initializer
+                    {
+                        HttpClientInitializer = credential,
+                        ApplicationName = "Google Analytics API Console"
+                    }))
             {
-                request = new RunReportRequest
+                var dateRange = new DateRange
                 {
-                    Property = "properties/" + propertyId,
-                    Dimensions = { new Dimension { Name = "itemId" }, },
-                    Metrics = { new Metric { Name = "sessions" }, new Metric { Name = "itemsViewed" }, },
-                    DateRanges = { new DateRange { StartDate = startDate, EndDate = endDate }, },
-                    Limit = limit,
-                    Offset = offset,
+                    StartDate = startDate,
+                    EndDate = endDate
                 };
-                response = client.RunReport(request);
-                WriteToFile(response.Rows.ToString(), startDate, offset, propertyId);
-                SaveToDb(response.Rows.ToString(), startDate, endDate, dalis);
-                Console.WriteLine("Offset {0}, rowcount{1}", offset, rowCount);
-                rowCount = response.RowCount;
-                offset = offset + limit;
-            } while (offset < rowCount);
+                var sessions = new Metric
+                {
+                    Expression = "ga:productDetailViews"
+                };
 
+                do
+                {
+                    var reportRequest = new ReportRequest
+                    {
+                        DateRanges = new List<DateRange> { dateRange },
+                        Dimensions = new List<Dimension> { new Dimension { Name = "ga:productSku" }, new Dimension { Name = "ga:eventAction" } },
+                        Metrics = new List<Metric> { sessions },
+                        ViewId = propertyId,
+                        PageToken = offset.ToString(),
+                        PageSize = limit
+
+                    };
+                    var getReportsRequest = new GetReportsRequest
+                    {
+                        ReportRequests = new List<ReportRequest> { reportRequest }
+                    };
+                    var batchRequest = svc.Reports.BatchGet(getReportsRequest);
+                    response = batchRequest.Execute();
+                    resultJson = JsonConvert.SerializeObject(response.Reports.First().Data.Rows);
+                    WriteToFile(resultJson, startDate, offset, propertyId);
+                    SaveToDb(resultJson, startDate, endDate, dalis);
+                    rowCount = response.Reports.First().Data.RowCount;
+
+                    offset = offset + limit;
+                } while (offset < rowCount);
+
+
+                //string strJson = JsonConvert.SerializeObject(response.Reports.First().Data);
+                //Console.WriteLine(strJson);
+            }
         }
 
         public static void SaveToDb(string response, string startDate, string endDate, string dalis)
@@ -64,7 +80,7 @@ namespace GoogleAPI
             try
             {
                 SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnString_Analitika"].ConnectionString);
-                SqlCommand cmd = new SqlCommand("GoogleAPI_save", conn);
+                SqlCommand cmd = new SqlCommand("GoogleAPI_old_save", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@dataNuo", startDate);
                 cmd.Parameters.AddWithValue("@dataIki", endDate);
@@ -91,7 +107,7 @@ namespace GoogleAPI
             {
                 SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnString_Analitika"].ConnectionString);
            
-                SqlCommand cmd = new SqlCommand("GoogleAPI_delete", conn);
+                SqlCommand cmd = new SqlCommand("GoogleAPI_old_delete", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@dataNuo", startDate);
                 cmd.Parameters.AddWithValue("@dataIki", endDate);
